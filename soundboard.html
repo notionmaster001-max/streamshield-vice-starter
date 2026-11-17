@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamShield Vice™ | DMCA-Safe Soundboard Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            vice: {
+              pink: '#ff2a85',
+              purple: '#8a2be2',
+              cyan: '#00f0ff',
+              dark: '#080811',
+              panel: '#10101f',
+              border: '#24243e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- OFFLINE CSS FALLBACK -->
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #080811;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .active-card:active {
+      transform: scale(0.96);
+      filter: brightness(1.3);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { border-color: rgba(255, 42, 133, 0.4); box-shadow: 0 0 15px rgba(255, 42, 133, 0.2); }
+      50% { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
+    }
+    .glow-border { animation: pulseGlow 4s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-vice-dark text-slate-100 min-h-screen font-sans flex flex-col select-none antialiased">
+
+  <!-- TOP OBS DOCK HEADER -->
+  <header class="bg-vice-panel border-b border-vice-border px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-vice-pink flex items-center justify-center font-black text-black text-sm shadow-md shadow-vice-pink/30">
+        🛡️
+      </div>
+      <div>
+        <h1 class="text-sm font-black tracking-wider text-white uppercase flex items-center gap-1.5">
+          <span>StreamShield Vice™</span>
+          <span class="text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-700/50 px-1.5 py-0.2 rounded">100% DMCA-FREE</span>
+        </h1>
+        <p class="text-[10px] text-slate-400 font-mono">OBS Custom Dock & Standalone Sound Engine</p>
+      </div>
+    </div>
+
+    <!-- MASTER VOLUME & STATUS -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-xs font-mono text-slate-400">
+        <span>VOL</span>
+        <input type="range" id="master-vol" min="0" max="1" step="0.05" value="0.75" class="w-20 accent-vice-pink">
+      </div>
+      <button onclick="stopAllAudio()" class="px-2.5 py-1 text-xs font-mono bg-red-950/60 hover:bg-red-900 border border-red-700/50 text-red-300 rounded transition">
+        PANIC STOP (ESC)
+      </button>
+    </div>
+  </header>
+
+  <!-- LIVE VISUALIZER CANVAS (Auto-Resizing) -->
+  <div id="vis-container" class="w-full bg-black/60 h-12 border-b border-vice-border relative overflow-hidden flex items-center justify-center">
+    <canvas id="visualizer" class="w-full h-full block"></canvas>
+    <div class="absolute text-[10px] font-mono text-slate-500 uppercase tracking-widest pointer-events-none">
+      PROCEDURAL SYNTH ENGINE • HARDWARE-COMPRESSED LIMITER ACTIVE
+    </div>
+  </div>
+
+  <!-- MAIN SOUNDBOARD GRID -->
+  <main class="flex-1 p-4 max-w-5xl mx-auto w-full flex flex-col gap-4">
+
+    <div class="flex items-center justify-between text-xs font-mono text-slate-400 px-1">
+      <span>CLICK BUTTON OR PRESS HOTKEY TO TRIGGER SFX</span>
+      <span class="text-vice-cyan">AUDIO ENGINE: WEB AUDIO API v2 (LIMITER: -12dB)</span>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+
+      <!-- SFX 1 -->
+      <button onclick="triggerSFX('siren')" class="active-card bg-vice-panel border border-vice-border hover:border-vice-pink p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">🚨</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-vice-pink border border-slate-700 font-bold">KEY 1</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-vice-pink transition">Vice Police Siren</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Modulated Dual-Tone</p>
+        </div>
+      </button>
+
+      <!-- SFX 2 -->
+      <button onclick="triggerSFX('wasted')" class="active-card bg-vice-panel border border-vice-border hover:border-red-500 p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">💀</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-red-400 border border-slate-700 font-bold">KEY 2</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-red-400 transition">"Wasted" Sub-Drop</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Heavy 40Hz Bass Thud</p>
+        </div>
+      </button>
+
+      <!-- SFX 3 -->
+      <button onclick="triggerSFX('heist')" class="active-card bg-vice-panel border border-vice-border hover:border-emerald-400 p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">💰</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-slate-700 font-bold">KEY 3</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-emerald-400 transition">Vault Score Chime</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Major Triad Arpeggio</p>
+        </div>
+      </button>
+
+      <!-- SFX 4 -->
+      <button onclick="triggerSFX('boost')" class="active-card bg-vice-panel border border-vice-border hover:border-vice-cyan p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">⚡</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-vice-cyan border border-slate-700 font-bold">KEY 4</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-vice-cyan transition">Nitrous Supercharge</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Turbine Resonance Sweep</p>
+        </div>
+      </button>
+
+      <!-- SFX 5 -->
+      <button onclick="triggerSFX('gun')" class="active-card bg-vice-panel border border-vice-border hover:border-amber-400 p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">🔫</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-400 border border-slate-700 font-bold">KEY 5</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-amber-400 transition">Tactical Weapon Reload</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Mechanical Noise Snap</p>
+        </div>
+      </button>
+
+      <!-- SFX 6 -->
+      <button onclick="triggerSFX('radio')" class="active-card bg-vice-panel border border-vice-border hover:border-purple-400 p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">📻</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-purple-400 border border-slate-700 font-bold">KEY 6</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-purple-400 transition">Retro Radio Static</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Vintage FM Scan Burst</p>
+        </div>
+      </button>
+
+      <!-- SFX 7 -->
+      <button onclick="triggerSFX('alarm')" class="active-card bg-vice-panel border border-vice-border hover:border-rose-400 p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">⚠️</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-rose-400 border border-slate-700 font-bold">KEY 7</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-rose-400 transition">5-Star Wanted Klaxon</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Pulsed Tactical Buzzer</p>
+        </div>
+      </button>
+
+      <!-- SFX 8 -->
+      <button onclick="triggerSFX('synth')" class="active-card bg-vice-panel border border-vice-border hover:border-pink-400 p-3.5 rounded-xl text-left transition flex flex-col justify-between h-24 group relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xl">🌴</span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-pink-400 border border-slate-700 font-bold">KEY 8</span>
+        </div>
+        <div>
+          <h2 class="text-xs font-bold text-white group-hover:text-pink-400 transition">Miami Sunset Pad</h2>
+          <p class="text-[10px] text-slate-400 font-mono">Polyphonic Synthwave</p>
+        </div>
+      </button>
+
+    </div>
+
+    <!-- QUICK INSTRUCTIONS FOR OBS -->
+    <div class="mt-4 bg-vice-panel/60 border border-vice-border rounded-xl p-4 text-xs space-y-2">
+      <h3 class="font-bold text-vice-cyan uppercase font-mono">OBS Studio Dock Setup in 30 Seconds:</h3>
+      <ol class="list-decimal list-inside text-slate-400 space-y-1 font-mono">
+        <li>In OBS Studio, click menu bar: <code class="text-white">Docks</code> &gt; <code class="text-white">Custom Browser Docks...</code></li>
+        <li>Enter Dock Name: <code class="text-vice-pink">StreamShield Vice</code></li>
+        <li>Paste the local file path to this <code class="text-white">soundboard.html</code> file and click <strong>Apply</strong>.</li>
+        <li>Dock it into your OBS sidebar for instant one-click soundboard control during live broadcasts!</li>
+      </ol>
+    </div>
+
+  </main>
+
+  <!-- WEB AUDIO PROCEDURAL ENGINE WITH COMPRESSION LIMITER -->
+  <script>
+    let audioCtx = null;
+    let masterGain = null;
+    let compressor = null;
+    let activeNodes = [];
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Add DynamicsCompressorNode to prevent clipping/distortion
+        compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-12, audioCtx.currentTime);
+        compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+        compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+        compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+        compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+        masterGain = audioCtx.createGain();
+        masterGain.connect(compressor);
+        compressor.connect(audioCtx.destination);
+        setupVisualizer();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const volSlider = document.getElementById('master-vol');
+      if (volSlider && masterGain) {
+        masterGain.gain.setValueAtTime(parseFloat(volSlider.value), audioCtx.currentTime);
+      }
+    }
+
+    document.getElementById('master-vol').addEventListener('input', (e) => {
+      if (masterGain && audioCtx) {
+        masterGain.gain.setValueAtTime(parseFloat(e.target.value), audioCtx.currentTime);
+      }
+    });
+
+    function stopAllAudio() {
+      activeNodes.forEach(node => {
+        try { node.stop(); } catch(e) {}
+      });
+      activeNodes = [];
+    }
+
+    function triggerSFX(type) {
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      if (type === 'siren') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.linearRampToValueAtTime(950, now + 0.35);
+        osc.frequency.linearRampToValueAtTime(600, now + 0.7);
+        osc.frequency.linearRampToValueAtTime(950, now + 1.05);
+        osc.frequency.linearRampToValueAtTime(600, now + 1.4);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 1.5);
+        activeNodes.push(osc);
+      } 
+      else if (type === 'wasted') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.exponentialRampToValueAtTime(32, now + 0.8);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.9);
+        activeNodes.push(osc);
+      } 
+      else if (type === 'heist') {
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+          gain.gain.setValueAtTime(0.2, now + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.4);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + idx * 0.1);
+          osc.stop(now + idx * 0.1 + 0.4);
+          activeNodes.push(osc);
+        });
+      } 
+      else if (type === 'boost') {
+        const osc = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(1400, now + 0.6);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(200, now);
+        filter.frequency.exponentialRampToValueAtTime(3500, now + 0.6);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.7);
+        activeNodes.push(osc);
+      }
+      else if (type === 'gun') {
+        const bufferSize = audioCtx.sampleRate * 0.15;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1800, now);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        noise.start(now);
+        activeNodes.push(noise);
+      }
+      else if (type === 'radio') {
+        const bufferSize = audioCtx.sampleRate * 0.4;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(800, now);
+        filter.Q.setValueAtTime(4.0, now);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        noise.start(now);
+        activeNodes.push(noise);
+      }
+      else if (type === 'alarm') {
+        for (let i = 0; i < 3; i++) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(850, now + i * 0.25);
+          gain.gain.setValueAtTime(0.18, now + i * 0.25);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.25 + 0.18);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + i * 0.25);
+          osc.stop(now + i * 0.25 + 0.18);
+          activeNodes.push(osc);
+        }
+      }
+      else if (type === 'synth') {
+        const chord = [220, 277.18, 329.63, 415.30];
+        chord.forEach(f => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, now);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 1.2);
+          activeNodes.push(osc);
+        });
+      }
+    }
+
+    // Keyboard Hotkey Listener (Ignoring input fields)
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'Escape') stopAllAudio();
+      if (e.key === '1') triggerSFX('siren');
+      if (e.key === '2') triggerSFX('wasted');
+      if (e.key === '3') triggerSFX('heist');
+      if (e.key === '4') triggerSFX('boost');
+      if (e.key === '5') triggerSFX('gun');
+      if (e.key === '6') triggerSFX('radio');
+      if (e.key === '7') triggerSFX('alarm');
+      if (e.key === '8') triggerSFX('synth');
+    });
+
+    // Auto-resizing visualizer canvas
+    function setupVisualizer() {
+      const container = document.getElementById('vis-container');
+      const canvas = document.getElementById('visualizer');
+      const ctx = canvas.getContext('2d');
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      masterGain.connect(analyser);
+
+      function resizeCanvas() {
+        if (container) {
+          canvas.width = container.clientWidth || 600;
+          canvas.height = container.clientHeight || 48;
+        }
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function draw() {
+        requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = 'rgba(8, 8, 17, 0.4)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 1.5;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (dataArray[i] / 255) * canvas.height;
+          ctx.fillStyle = i % 2 === 0 ? '#ff2a85' : '#00f0ff';
+          ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+          x += barWidth;
+        }
+      }
+      draw();
+    }
+  </script>
+</body>
+</html>
